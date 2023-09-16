@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "hw-web5"
+version = "0.1.0"
+description = "exchange"
+authors = ["Denko <officedenko@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+websocket = "^0.2.1"
+websockets = "^11.0.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
