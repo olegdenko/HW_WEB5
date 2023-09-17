@@ -12,7 +12,7 @@ from datetime import datetime
 from get_currency import get_exchange
 
 HOST = socket.gethostname()
-PORT = 8080
+PORT = 8081
 
 stop_event = asyncio.Event()
 
