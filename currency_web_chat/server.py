@@ -4,12 +4,15 @@ import websockets
 import platform
 import names
 import aiofiles
-from aiopath import AsyncPath
+import socket
 from websockets import WebSocketServerProtocol
 from websockets.exceptions import ConnectionClosedOK
 from datetime import datetime
 
 from get_currency import get_exchange
+
+HOST = socket.gethostname()
+PORT = 8080
 
 stop_event = asyncio.Event()
 
@@ -82,7 +85,7 @@ def handle_exit():
 
 async def main():
     server = Server()
-    async with websockets.serve(server.ws_handler, "localhost", 8080):
+    async with websockets.serve(server.ws_handler, HOST, PORT):
         await stop_event.wait()
 
 
