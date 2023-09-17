@@ -4,9 +4,10 @@ import websockets
 import platform
 import names
 import aiofiles
-import aiopath
+from aiopath import AsyncPath
 from websockets import WebSocketServerProtocol
 from websockets.exceptions import ConnectionClosedOK
+from datetime import datetime
 
 from get_currency import get_exchange
 
@@ -55,7 +56,7 @@ class Server:
 
                 r = await get_exchange(days)
                 await self.send_to_clients(f"The currency were: {r} - {days} ago.")
-                logging.info(days)
+                await self.log_exchange_to_file(ws.name, days)
             else:
                 await self.send_to_clients(f"{ws.name}: {message}")
 
@@ -63,6 +64,14 @@ class Server:
         for ws in self.clients:
             await ws.close()
         stop_event.set()
+
+    async def log_exchange_to_file(self, username, days):
+        date_str = datetime.now().strftime("%d-%m-%Y %H-%M-%S")
+        log_message = (
+            f"{date_str} {username} executed 'exchange' command for {days} days."
+        )
+        async with aiofiles.open("exchange.log", mode="a") as log_file:
+            await log_file.write(log_message + "\n")
 
 
 def handle_exit():
