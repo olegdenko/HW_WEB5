@@ -3,6 +3,8 @@ import logging
 import websockets
 import platform
 import names
+import aiofiles
+import aiopath
 from websockets import WebSocketServerProtocol
 from websockets.exceptions import ConnectionClosedOK
 
@@ -53,6 +55,7 @@ class Server:
 
                 r = await get_exchange(days)
                 await self.send_to_clients(f"The currency were: {r} - {days} ago.")
+                logging.info(days)
             else:
                 await self.send_to_clients(f"{ws.name}: {message}")
 
@@ -64,7 +67,6 @@ class Server:
 
 def handle_exit():
     logging.info("Server is shutting down...")
-    # print("Server is shutting down...")
     stop_event.set()
     loop.stop()
 
