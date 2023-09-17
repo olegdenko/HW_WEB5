@@ -9,4 +9,3 @@ def get_full_name():
 
 if __name__ == "__main__":
     name = get_full_name()
-    # print("Фейкове ім'я:", name)

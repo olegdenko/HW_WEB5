@@ -1,14 +1,13 @@
 [tool.poetry]
-name = "hw-web5"
-version = "0.1.0"
-description = "exchange"
+name = "currency-web-chat"
+version = "0.2.1"
+description = "You can use web chat and get_currency"
 authors = ["Denko <officedenko@gmail.com>"]
+license = "MIT License"
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-websocket = "^0.2.1"
-websockets = "^11.0.3"
 
 
 [build-system]

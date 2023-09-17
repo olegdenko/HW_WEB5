@@ -3,28 +3,18 @@ import logging
 import websockets
 import platform
 import names
-import aiohttp
-import json
-
 from websockets import WebSocketServerProtocol
 from websockets.exceptions import ConnectionClosedOK
 
+from get_currency import get_exchange
 
-API = "https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=5"
-
-
-async def get_exchange():
-    async with aiohttp.ClientSession() as session:
-        async with session.get(API) as response:
-            # result, *_ = list(filter(lambda el: el['ccy'] == 'USD', response))
-            data = await response.json()
-            result = json.dumps(data)
-            # return f"USD: buy: {result['buy']}, sale: {result['sale']}"
-            print(result)
-            return result
+stop_event = asyncio.Event()
 
 
 class Server:
+    def __init__(self):
+        self.shutdown = False
+
     clients = set()
 
     async def register(self, ws: WebSocketServerProtocol):
@@ -43,30 +33,51 @@ class Server:
     async def ws_handler(self, ws: WebSocketServerProtocol):
         await self.register(ws)
         try:
-            await self.distrubute(ws)
+            await self.distribute(ws)
         except ConnectionClosedOK:
             pass
         finally:
             await self.unregister(ws)
 
-    async def distrubute(self, ws: WebSocketServerProtocol):
+    async def distribute(self, ws: WebSocketServerProtocol):
         async for message in ws:
-            if message == "exchange":
-                r = await get_exchange()
-                await self.send_to_clients(r)
+            if message == "killall":
+                await self.send_to_clients("Server is shutting down...")
+                await self.stop_server()
+            elif message.startswith("exchange"):
+                parts = message.split()
+                if len(parts) == 2 and parts[1].isdigit():
+                    days = min(int(parts[1]), 10)
+                else:
+                    days = 0
+
+                r = await get_exchange(days)
+                await self.send_to_clients(f"The currency were: {r} - {days} ago.")
             else:
                 await self.send_to_clients(f"{ws.name}: {message}")
+
+    async def stop_server(self):
+        for ws in self.clients:
+            await ws.close()
+        stop_event.set()
+
+
+def handle_exit():
+    logging.info("Server is shutting down...")
+    # print("Server is shutting down...")
+    stop_event.set()
+    loop.stop()
 
 
 async def main():
     server = Server()
     async with websockets.serve(server.ws_handler, "localhost", 8080):
-        await asyncio.Future()  # run forever
+        await stop_event.wait()
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     if platform.system() == "Windows":
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    r = asyncio.run(main())
-    print(r)
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
